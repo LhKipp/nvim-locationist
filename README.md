@@ -52,3 +52,6 @@ require'locationist'.setup{
     send_to = "clipboard",
 }
 ```
+
+## Known issues
+* It is possible to invoke the command in visual mode. It will then store the location as `file_path:selection_begin:selection_end: comment`. The quickfix and location list may show `selection_end` as `col`.
