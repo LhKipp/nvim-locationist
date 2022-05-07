@@ -2,6 +2,8 @@
 
 Add your current cursor location to the quickfix list, location list or to the clipboard with ease.
 
+![](assets/example.png)
+
 ## Installation
 
 ```vim
