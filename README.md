@@ -32,6 +32,7 @@ require'locationist'.yank{send_to="clist", comment="default"}
 -- Copy the current cursor location to the location list (with the full file path)
 require'locationist'.yank{send_to="llist", expand_str="%:p"}
 ```
+The yank command can be used from normal or visual mode.
 
 ## Configuration
 Values passed via the `setup` command will set the default behaviour of the `yank` command.
@@ -57,6 +58,3 @@ require'locationist'.setup{
     indicator = '', -- Can be 1 character long string at most!
 }
 ```
-
-## Known issues
-* It is possible to invoke the command in visual mode. It will then store the location as `file_path:selection_begin:selection_end: comment`. The quickfix and location list may show `selection_end` as `col`.
