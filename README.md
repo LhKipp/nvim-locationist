@@ -38,8 +38,11 @@ Values passed via the `setup` command will set the default behaviour of the `yan
 ```lua
 -- Default values are being shown
 require'locationist'.setup{
-    -- How the file name will be expanded
-    expand_str = "%", -- see :h expand for possible values
+    -- Where the location shall be stored
+    --      * clipboard = @+
+    --      * clist     = current quickfix list
+    --      * llist     = current location list
+    send_to = "clipboard",
     -- locationist optionally asks for a comment to store together with the location
     -- set comment to
     --      * "none" to not ask for a comment
@@ -47,11 +50,11 @@ require'locationist'.setup{
     --      * your own function. The signature should be `function() -> string`
     --        (If you created a nice func, please share it with us :) )
     comment = "none",
-    -- Where the location shall be stored
-    --      * clipboard = @+
-    --      * clist     = current quickfix list
-    --      * llist     = current location list
-    send_to = "clipboard",
+    -- How the file name will be expanded
+    expand_str = "%", -- see :h expand for possible values
+    -- If indicator is non empty, a character is displayed next to the line number in the llist/clist
+    -- Ignored for send_to = "clipboard"
+    indicator = '', -- Can be 1 character long string at most!
 }
 ```
 
