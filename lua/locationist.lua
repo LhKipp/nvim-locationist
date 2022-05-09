@@ -52,14 +52,20 @@ local function fmtLineNumber(lineNumber)
     end
 end
 
-local function addToList(listAddFunc, path, lineNumber, comment)
+local function addToList(config_values, listAddFunc, path, lineNumber, comment)
+    if config_values.indicator:len() > 1 then
+        -- setting type to indicator will only use first char
+        log.error("Config value 'indicator' must be a string of maximally 1 character.")
+        log.error("Actual value:", config_values.indicator)
+        log.error("Continuing with the first character of indicator.")
+    end
     local listItem = {
         bufnr = vim.fn.bufnr('%'),
         filename = path,
         lnum = lineNumber.startLine,
         end_lnum = lineNumber.endLine,
         text = comment,
-        type = 'L',
+        type = config_values.indicator,
         valid = true,
     }
     listAddFunc(listItem)
@@ -77,16 +83,18 @@ function M.yank(overwrite_config)
         v.fn.setreg("+", path .. ":" .. fmtLineNumber(lineNumber) .. " " .. comment)
     elseif config_values.send_to == "clist" then
         addToList(
+            config_values,
             function(dic) vim.fn.setqflist({dic}, 'a') end,
             path, lineNumber, comment
         )
     elseif config_values.send_to == "llist" then
         addToList(
+            config_values,
             function(dic) vim.fn.setloclist(0, {dic}, 'a') end,
             path, lineNumber, comment
         )
     else
-        log.error("Unknown `send_config_values.send_to` location:", config_values.send_to)
+        log.error("Unknown `config value send_to`:", config_values.send_to, ". Valid values are 'clipboard', 'llist' or 'clist'.")
     end
 end
 
@@ -108,6 +116,9 @@ local function default_opts()
         --      * clist     = current quickfix list
         --      * llist     = current location list
         send_to = "clipboard",
+        -- If indicator is non empty, a character is displayed next to the line number in the llist/clist
+        -- Ignored for send_to = "clipboard"
+        indicator = '', -- Can be 1 character long string at most!
     }
 end
 
