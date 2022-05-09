@@ -31,53 +31,64 @@ local function getComment(config_values)
     end
 end
 
-local function sendStrTo(str, config_values)
-    if config_values.send_to == "clipboard" then
-        -- Fixup the str here, see TODO below
-        local tmp = str:reverse()
-        tmp = string.gsub(tmp, "^%s+", "")
-        v.fn.setreg("+", tmp:reverse())
-    elseif config_values.send_to == "clist" then
-        v.cmd(string.format([[caddexpr "%s"]], str))
-    elseif config_values.send_to == "llist" then
-        v.cmd(string.format([[laddexpr "%s"]], str))
-    else
-        log.error("Unknown `send_config_values.send_to` location:", config_values.send_to)
-    end
-end
-
-local function getLineNumberFormatted()
+local function getLineNumber()
     if string.find(v.fn.mode(), "^V") ~= nil then
         local a = v.fn.getpos("v")[2]
         local b =  v.fn.getpos(".")[2]
         if (a > b) then
             a, b = b, a
         end
-        return a .. ":" .. b
+        return {type = 'v', startLine = a, endLine = b }
     else
-        return v.fn.line(".")
+        return {type = 'n', startLine = v.fn.line(".")}
     end
+end
+
+local function fmtLineNumber(lineNumber)
+    if lineNumber.type == 'v' then
+        return lineNumber.startLine .. "-" .. lineNumber.endLine
+    else
+        return lineNumber.startLine
+    end
+end
+
+local function addToList(listAddFunc, path, lineNumber, comment)
+    local listItem = {
+        bufnr = vim.fn.bufnr('%'),
+        filename = path,
+        lnum = lineNumber.startLine,
+        end_lnum = lineNumber.endLine,
+        text = comment,
+        type = 'L',
+        valid = true,
+    }
+    listAddFunc(listItem)
 end
 
 function M.yank(overwrite_config)
     local config_values = v.tbl_extend("force", M._config, overwrite_config or {})
 
     local path = v.fn.expand(config_values.expand_str)
-    local lineNumber = getLineNumberFormatted()
+    local lineNumber = getLineNumber()
     local comment = getComment(config_values)
 
-    -- We hijack gcc's errorformat here. Somehow I am unable to get an errorformat working
-    -- without everything breaking and vim complaining about "%-" in an errorformat
-    -- TODO create custom errorformat
-    local location
-    if comment ~= "" then
-        location = path .. ":" .. lineNumber .. ": " .. comment
+    if config_values.send_to == "clipboard" then
+        -- Fixup the str here, see TODO below
+        v.fn.setreg("+", path .. ":" .. fmtLineNumber(lineNumber) .. " " .. comment)
+    elseif config_values.send_to == "clist" then
+        addToList(
+            function(dic) vim.fn.setqflist({dic}, 'a') end,
+            path, lineNumber, comment
+        )
+    elseif config_values.send_to == "llist" then
+        addToList(
+            function(dic) vim.fn.setloclist(0, {dic}, 'a') end,
+            path, lineNumber, comment
+        )
     else
-        location = path .. ":" .. lineNumber .. ": "
+        log.error("Unknown `send_config_values.send_to` location:", config_values.send_to)
     end
-    sendStrTo(location, config_values)
 end
-
 
 -- Configuration --
 
