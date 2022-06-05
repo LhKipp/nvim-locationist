@@ -5,11 +5,16 @@ local log = require("locationist.log")
 -- Constants --
 
 -- functions --
+-- @return nil if an error occured, otherwise a string containing the comment
 local function getComment(config_values)
     if config_values.comment == "none" then
         return ""
     elseif config_values.comment == "default" then
-        return v.fn.input("Comment: ")
+        local input_comment =  v.fn.input("Comment: ")
+        if input_comment == nil or input_comment == "" then
+            return nil
+        end
+        return input_comment
     elseif type(config_values.comment) == "function" then
         local user_comment = config_values.comment()
         if type(user_comment) ~= "string" then
@@ -77,6 +82,10 @@ function M.yank(overwrite_config)
     local path = v.fn.expand(config_values.expand_str)
     local lineNumber = getLineNumber()
     local comment = getComment(config_values)
+
+    if comment == nil then
+        return
+    end
 
     if config_values.send_to == "clipboard" then
         -- Fixup the str here, see TODO below
